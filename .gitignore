@@ -22,6 +22,7 @@ Output/
 # Keil 用户级界面状态 / 调试配置（因人而异，不入库）
 *.uvguix.*
 *.scvd
+*.zip
 DebugConfig/
 
 # 系统文件
