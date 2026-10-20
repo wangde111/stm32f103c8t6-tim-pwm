@@ -1,0 +1,30 @@
+# Keil MDK 编译产物
+Output/
+*.o
+*.d
+*.crf
+*.axf
+*.hex
+*.bin
+*.elf
+*.lst
+*.map
+*.sct
+*.lnp
+*.dep
+*.htm
+*.build_log.htm
+*.__i
+*.iex
+*.tra
+*.bak
+
+# Keil 用户级界面状态 / 调试配置（因人而异，不入库）
+*.uvguix.*
+*.scvd
+DebugConfig/
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
