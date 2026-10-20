@@ -41,6 +41,8 @@
 │   ├── Output/       编译产物 (TIM_PWM.hex)
 │   ├── sim.ini       Keil 仿真逻辑分析仪配置
 │   └── readme.txt
+├── docs/
+│   └── pwm_waveform.png   仿真波形图
 └── README.md         本文档
 ```
 
@@ -112,24 +114,35 @@ void TIM3_IRQHandler(void)
 
 ---
 
-## 五、Keil 仿真：用逻辑分析仪观察 PWM 波形
+## 五、仿真波形
+
+### 波形图（按本工程参数计算）
+
+![PWM 仿真波形](docs/pwm_waveform.png)
+
+图中三个面板对应本工程的三件事：
+
+| 面板 | 内容 | 关键数值 |
+|------|------|----------|
+| TIM3_CH3 (PB0) | PWM 载波细节（取 t≈0.3 s 处的 3 个周期） | 周期 1 ms（1 kHz），高电平 0.3 ms → 占空比 30% |
+| CCR3 / 占空比 | 呼吸调制曲线 | 1 s 内 0%→100%，再 1 s 内 100%→0%，呼吸周期 2 s |
+| PA1 (LED1) | 定时器计数方式控制 LED | 每 2000 个 1 ms 计数翻转一次 → 亮 2 s / 灭 2 s |
+
+> 这张图是用工程里的实际参数（`PSC=71`、`ARR=999`、`BREATH_STEP=1`、`BLINK_TICKS=2000`）算出来绘制的，
+> 数值就是逻辑分析仪/示波器上应该读到的值。想直接在 Keil 里看，按下面的步骤操作。
+
+### 在 Keil 里实测
 
 1. 打开 `Project\MDK-ARM\TIM_PWM.uvprojx`；
-2. `Options for Target → Debug → Use Simulator`（本工程已配好 `sim.ini`）；
-3. `F5` 进入调试 → `View → Logic Analyzer`；
-4. 点 `Setup` 旁边的 **Signal** 按钮，添加信号：
-   - `TIM3_CH3` —— TIM3 通道 3 的 PWM 输出（**首选**）
-   - `P1.0` —— PB0 引脚的电平（P1.x = GPIOB，x 为引脚号）
-   - `P0.1` —— PA1 引脚电平（2 s 闪烁）
-5. `Run`（F5）运行，即可看到：
-   - `TIM3_CH3`：1 kHz 的方波，高电平宽度随呼吸缓慢变化（0%→100%→0%）；
-   - `P0.1`：2 s 翻转一次的方波。
+2. `Options for Target → Debug` 选 **Use Simulator**（本工程已配好 `sim.ini`）；
+3. `Ctrl+F5` 进入调试 → `View → Analysis Windows → Logic Analyzer`；
+4. 点 `Setup...`，在 `Signal` 里添加要观察的信号后点 `Define`（STM32 外设模型的定时器通道输出一般以
+   `CC3_OUT`、`TIM3_CH3` 之类的名字出现，不同 MDK 版本命名略有差异，以对话框里能选到的为准）；
+5. `F5` 运行，就能看到高电平宽度随呼吸缓慢变化的 1 kHz 方波。
 
-> `sim.ini` 里已经写好了 `LA TIM3_CH3` / `LA P1.0` / `LA P0.1`，如果仿真窗口里没有信号，
-> 就按上面第 4 步手动添加一次即可（信号名来自 Keil 的 STM32 外设模型）。
-
-**若 PB0 上看不到 PWM 波形**：把 `Core/Inc/tim_pwm.h` 里的 `SIM_PWM_MIRROR` 改成 `1` 重新编译，
-程序会用定时器中断把同样的波形"镜像"到 PC13（P2.13）上，供逻辑分析仪观察。
+**若在模型里找不到 PB0 引脚/通道信号**：把 `Core/Inc/tim_pwm.h` 里的 `SIM_PWM_MIRROR` 改成 `1`
+重新编译，程序会在 TIM3 的更新中断与比较中断里把同样的 PWM 波形"镜像"到 PC13，
+观察 `PC13`（`P2.13`）即可，波形形状与 PB0 上的完全一致（仅边沿有微秒级中断延迟）。
 
 ---
 
